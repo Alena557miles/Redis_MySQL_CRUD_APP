@@ -1,6 +1,6 @@
-# Getting Started with MySQL_Server_CRUD  App
+# Getting Started with Redis_MySQL_Server_CRUD  App
 
-In this project i'm implement CRUD app "Art-Artist-Gallery" that manage data on MySQL database.
+In this project i'm implement CRUD app "Art-Artist-Gallery" that manage data on Cashe using Redis and MySQL database.
 
 ##  Server will start on 
 [http://localhost:8080](http://localhost:8080)

@@ -23,6 +23,9 @@ REGISTRATION AN ARTIST ON THE GALLERY use path:
 DELETE AN ARTIST FROM GALLERY use path:
 #### `http://localhost:8080/artist/delete/{artist}/{gallery}`
 
+DELETE AN ARTIST FROM GALLERY use path:
+#### `http://localhost:8080/deleteart/{artName}`
+
 RENAME GALLERY use path:
 #### `http://localhost:8080/renamegallery/{gallery}/{newgallery}`
 

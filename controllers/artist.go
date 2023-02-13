@@ -1,14 +1,14 @@
 package controllers
 
 import (
+	"creator/databaseRedis"
 	"creator/databaseSQL"
 	"creator/models"
-	"database/sql"
-	"encoding/json"
+	"creator/responses"
+	"github.com/gorilla/mux"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 type ArtistController struct {
@@ -30,38 +30,16 @@ func (ac *ArtistController) RegisterActions() {
 	ac.router.HandleFunc("/artist/register/{artist}/{gallery}", ac.ArtistRegistration)
 }
 
-func (ac *ArtistController) CreateArtistDB(db *sql.DB, artistName string) error {
-	_, err := db.Exec(`INSERT INTO artists (artist_name) VALUES (?)`, artistName)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
-}
-
-func (ac *ArtistController) FindArtistDB(db *sql.DB, artistName string) (*models.Artist, error) {
-	artist := &models.Artist{}
-	err := db.QueryRow(`SELECT artists.id FROM artists WHERE artists.artist_name = ?`, artistName).Scan(&artist.ID)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	return artist, nil
-}
-
-func (ac *ArtistController) RegisterArtistToGallery(db *sql.DB, artist *models.Artist, gallery *models.Gallery) error {
-	_, err := db.Exec(`INSERT INTO artist_gallery VALUES (?,?)`, artist.ID, gallery.ID)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
-}
-
 func (ac *ArtistController) Registration(rw http.ResponseWriter, r *http.Request) {
 	var vars map[string]string = mux.Vars(r)
 	var artistName string = vars["artist"]
 	artist := &models.Artist{Name: artistName, OnGallery: false}
+
+	rdb := redis.NewClient(databaseRedis.Opt)
+	err := databaseRedis.CreateArtist(rdb, artist)
+	if err != nil {
+		panic(err)
+	}
 
 	db, err := databaseSQL.ConnectSQL()
 	if err != nil {
@@ -70,16 +48,12 @@ func (ac *ArtistController) Registration(rw http.ResponseWriter, r *http.Request
 	}
 	defer db.Close()
 	databaseSQL.PingDB(db)
-	err = ac.CreateArtistDB(db, artistName)
+
+	err = databaseSQL.CreateArtist(db, artistName)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	jsonResp, err := json.Marshal(artist)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	rw.Write(jsonResp)
+	responses.ResponseCreate("Artist", artistName, rw)
 }
 
 func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.Request) {
@@ -95,22 +69,46 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	galleryC := &GalleryController{}
-	gallery, err := galleryC.FindGalleryDB(db, galleryName)
-	artist, err := ac.FindArtistDB(db, artistName)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = ac.RegisterArtistToGallery(db, artist, gallery)
-	if err != nil {
-		log.Fatal(err)
-	}
+	rdb := redis.NewClient(databaseRedis.Opt)
 
-	resp := make(map[string]string)
-	resp["message"] = `Artist: ` + artistName + `is registered on Gallery:` + galleryName
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	artist := databaseRedis.FindArtist(rdb, artistName)
+	gallery := databaseRedis.FindGallery(rdb, galleryName)
+	if artist != nil {
+		if gallery != nil {
+			err = databaseSQL.RegisterArtistToGallery(db, artist, gallery)
+			if err != nil {
+				panic(err)
+			}
+			return
+		}
+		gallery, err := databaseSQL.FindGallery(db, galleryName)
+		if err != nil {
+			panic(err)
+		}
+		err = databaseSQL.RegisterArtistToGallery(db, artist, gallery)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else if artist == nil {
+		artist, err := databaseSQL.FindArtist(db, artistName)
+		if err != nil {
+			panic(err)
+		}
+		if gallery != nil {
+			err = databaseSQL.RegisterArtistToGallery(db, artist, gallery)
+			if err != nil {
+				panic(err)
+			}
+			return
+		}
+		gallery, err := databaseSQL.FindGallery(db, galleryName)
+		if err != nil {
+			panic(err)
+		}
+		err = databaseSQL.RegisterArtistToGallery(db, artist, gallery)
+		if err != nil {
+			panic(err)
+		}
 	}
-	rw.Write(jsonResp)
+	responses.ResponseAction("Artist", artistName, "Gallery", galleryName, "registered", rw)
 }

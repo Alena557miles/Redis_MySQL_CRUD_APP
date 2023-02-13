@@ -5,13 +5,11 @@ import (
 	"creator/databaseRedis"
 	"creator/databaseSQL"
 	"creator/models"
-	"database/sql"
-	"encoding/json"
+	"creator/responses"
+	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
 var ctx = context.Background()
@@ -19,8 +17,6 @@ var ctx = context.Background()
 type ArtController struct {
 	arts   []*models.Art
 	router *mux.Router
-	db     *sql.DB
-	r      *redis.Client
 }
 
 func (ac *ArtController) RegisterRouter(r *mux.Router) {
@@ -36,35 +32,10 @@ func (ac *ArtController) RegisterActions() {
 	// localhost:8080/artist/assign/Fillip/blackCat
 	ac.router.HandleFunc("/artist/assign/{artist}/{art}", ac.AssignArt)
 
-}
+	// DELETE AN ART
+	// localhost:8080/deleteart/blackCat
+	ac.router.HandleFunc("/deleteart/{art}", ac.ArtDeletion)
 
-func (ac *ArtController) CreateArtDB(db *sql.DB, artName string) error {
-	_, err := db.Exec(`INSERT INTO arts (art_name) VALUES (?)`, artName)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
-}
-
-func (ac *ArtController) FindArtDB(db *sql.DB, artName string) (*models.Art, error) {
-	art := &models.Art{}
-	err := db.QueryRow(`SELECT arts.id FROM arts WHERE arts.art_name = ?`, artName).Scan(&art.ID)
-	if err != nil {
-		log.Fatal(err)
-		return nil, err
-	}
-	return art, nil
-}
-
-func (ac *ArtController) AssignedArtToArtistDB(db *sql.DB, art *models.Art, artist *models.Artist) error {
-	// pass data to table artist-art
-	_, err := db.Exec(`INSERT INTO artist_art VALUES (?,?)`, artist.ID, art.ID)
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-	return nil
 }
 
 func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
@@ -73,7 +44,7 @@ func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
 	art := &models.Art{Name: artName}
 
 	rdb := redis.NewClient(databaseRedis.Opt)
-	err := CreateArtRedis(rdb, artName)
+	err := databaseRedis.CreateArt(rdb, art)
 	if err != nil {
 		panic(err)
 	}
@@ -85,16 +56,11 @@ func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 	databaseSQL.PingDB(db)
-
-	err = ac.CreateArtDB(db, artName)
+	err = databaseSQL.CreateArt(db, artName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	jsonResp, err := json.Marshal(art)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	rw.Write(jsonResp)
+	responses.ResponseCreate("Art", artName, rw)
 }
 
 func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
@@ -110,32 +76,76 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	art, err := ac.FindArtDB(db, artName)
-	artistC := &ArtistController{}
-	artist, err := artistC.FindArtistDB(db, artistName)
-	if err != nil {
-		log.Fatal(err)
+	rdb := redis.NewClient(databaseRedis.Opt)
+
+	art := databaseRedis.FindArt(rdb, artName)
+	artist := databaseRedis.FindArtist(rdb, artistName)
+	if art != nil {
+		if artist != nil {
+			err = databaseSQL.AssignedArtToArtist(db, art, artist)
+			if err != nil {
+				panic(err)
+			}
+			return
+		}
+		artist, err := databaseSQL.FindArtist(db, artistName)
+		if err != nil {
+			panic(err)
+		}
+		err = databaseSQL.AssignedArtToArtist(db, art, artist)
+		if err != nil {
+			panic(err)
+		}
+	} else if art == nil {
+		art, err := databaseSQL.FindArt(db, artName)
+		if err != nil {
+			panic(err)
+		}
+		if artist != nil {
+			err = databaseSQL.AssignedArtToArtist(db, art, artist)
+			if err != nil {
+				panic(err)
+			}
+			return
+		}
+		artist, err := databaseSQL.FindArtist(db, artistName)
+		if err != nil {
+			panic(err)
+		}
+		err = databaseSQL.AssignedArtToArtist(db, art, artist)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	err = ac.AssignedArtToArtistDB(db, art, artist)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	resp := make(map[string]string)
-	resp["message"] = `Art: ` + artName + ` is assigned to Artist:` + artistName
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	rw.Write(jsonResp)
+	responses.ResponseAction("Art", artName, "Artist", artistName, "assigned", rw)
 }
 
-func CreateArtRedis(rdb *redis.Client, artName string) error {
-	err := rdb.Set(ctx, "art", artName, 0).Err()
+func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
+	var vars map[string]string = mux.Vars(r)
+	var artName string = vars["art"]
+
+	rdb := redis.NewClient(databaseRedis.Opt)
+	err := databaseRedis.DeleteArt(rdb, artName)
 	if err != nil {
 		panic(err)
-		return err
 	}
-	return nil
+
+	db, err := databaseSQL.ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return
+	}
+	defer db.Close()
+	databaseSQL.PingDB(db)
+
+	art, err := databaseSQL.FindArt(db, artName)
+	if err != nil {
+		panic(err)
+	}
+	err = databaseSQL.DeleteArt(db, art)
+	if err != nil {
+		log.Fatal(err)
+	}
+	responses.ResponseAction("Art", artName, "", "", "deleted", rw)
 }

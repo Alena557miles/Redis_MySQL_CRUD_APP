@@ -2,12 +2,11 @@ package controllers
 
 import (
 	"context"
-	"creator/databaseRedis"
+	"creator/cache"
 	"creator/databaseSQL"
 	"creator/models"
 	"creator/responses"
 	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 )
@@ -43,8 +42,7 @@ func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
 	var artName string = vars["art"]
 	art := &models.Art{Name: artName}
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-	err := databaseRedis.CreateArt(rdb, art)
+	err := cache.CreateArt(art)
 	if err != nil {
 		panic(err)
 	}
@@ -76,10 +74,8 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-
-	art := databaseRedis.FindArt(rdb, artName)
-	artist := databaseRedis.FindArtist(rdb, artistName)
+	art := cache.FindArt(artName)
+	artist := cache.FindArtist(artistName)
 	if art != nil {
 		if artist != nil {
 			err = databaseSQL.AssignedArtToArtist(db, art, artist)
@@ -125,8 +121,7 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 	var vars map[string]string = mux.Vars(r)
 	var artName string = vars["art"]
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-	err := databaseRedis.DeleteArt(rdb, artName)
+	err := cache.DeleteArt(artName)
 	if err != nil {
 		panic(err)
 	}

@@ -1,12 +1,11 @@
 package controllers
 
 import (
-	"creator/databaseRedis"
+	"creator/cache"
 	"creator/databaseSQL"
 	"creator/models"
 	"creator/responses"
 	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 )
@@ -39,8 +38,7 @@ func (gc *GalleryController) GalleryCreation(rw http.ResponseWriter, r *http.Req
 	var galleryName string = vars["gallery"]
 	gallery := &models.Gallery{Name: galleryName}
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-	err := databaseRedis.CreateGallery(rdb, gallery)
+	err := cache.CreateGallery(gallery)
 	if err != nil {
 		panic(err)
 	}
@@ -69,10 +67,8 @@ func (gc *GalleryController) RemoveArtistFromGal(rw http.ResponseWriter, r *http
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-	//searching data on cache
-	artist := databaseRedis.FindArtist(rdb, artistName)
-	gallery := databaseRedis.FindGallery(rdb, galleryName)
+	artist := cache.FindArtist(artistName)
+	gallery := cache.FindGallery(galleryName)
 	if artist != nil {
 		if gallery != nil {
 			err = databaseSQL.DeleteArtist(db, artist, gallery)
@@ -127,7 +123,6 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	rdb := redis.NewClient(databaseRedis.Opt)
 	g, err := databaseSQL.FindGallery(db, galleryName)
 	if err != nil {
 		log.Fatal(err)
@@ -136,7 +131,7 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = databaseRedis.UpdateGallery(rdb, g, newGalleryName)
+	err = cache.UpdateGallery(g, newGalleryName)
 	if err != nil {
 		panic(err)
 	}

@@ -1,4 +1,4 @@
-package databaseRedis
+package cache
 
 import (
 	"context"
@@ -12,9 +12,10 @@ import (
 var ctx = context.Background()
 
 // ART SERVICES
-func CreateArt(rdb *redis.Client, art *models.Art) error {
+func CreateArt(art *models.Art) error {
+	client := GetClient()
 	bytes, _ := json.Marshal(art)
-	err := rdb.Set(ctx, art.Name, bytes, 60*time.Second).Err()
+	err := client.Set(ctx, art.Name, bytes, 60*time.Second).Err()
 	if err != nil {
 		panic(err)
 		return err
@@ -22,8 +23,9 @@ func CreateArt(rdb *redis.Client, art *models.Art) error {
 	return nil
 }
 
-func FindArt(rdb *redis.Client, artName string) *models.Art {
-	artString, err := rdb.Get(ctx, artName).Result()
+func FindArt(artName string) *models.Art {
+	client := GetClient()
+	artString, err := client.Get(ctx, artName).Result()
 	if err == redis.Nil {
 		log.Println("Art does not exist in Redis")
 		return nil
@@ -38,12 +40,13 @@ func FindArt(rdb *redis.Client, artName string) *models.Art {
 	}
 }
 
-func DeleteArt(rdb *redis.Client, artName string) error {
-	_, err := rdb.Get(ctx, artName).Result()
+func DeleteArt(artName string) error {
+	client := GetClient()
+	_, err := client.Get(ctx, artName).Result()
 	if err == redis.Nil {
 		return nil
 	} else {
-		err := rdb.Del(ctx, artName).Err()
+		err := client.Del(ctx, artName).Err()
 		if err != nil {
 			panic(err)
 			return err
@@ -53,9 +56,10 @@ func DeleteArt(rdb *redis.Client, artName string) error {
 }
 
 // ARTIST SERVICES
-func CreateArtist(rdb *redis.Client, artist *models.Artist) error {
+func CreateArtist(artist *models.Artist) error {
+	client := GetClient()
 	bytes, _ := json.Marshal(artist)
-	err := rdb.Set(ctx, artist.Name, bytes, 60*time.Second).Err()
+	err := client.Set(ctx, artist.Name, bytes, 60*time.Second).Err()
 	if err != nil {
 		panic(err)
 		return err
@@ -63,8 +67,9 @@ func CreateArtist(rdb *redis.Client, artist *models.Artist) error {
 	return nil
 }
 
-func FindArtist(rdb *redis.Client, artistName string) *models.Artist {
-	artistString, err := rdb.Get(ctx, artistName).Result()
+func FindArtist(artistName string) *models.Artist {
+	client := GetClient()
+	artistString, err := client.Get(ctx, artistName).Result()
 	if err == redis.Nil {
 		log.Println("Artist does not exist in Redis")
 		return nil
@@ -80,9 +85,10 @@ func FindArtist(rdb *redis.Client, artistName string) *models.Artist {
 }
 
 // GALLERY SERVICES
-func CreateGallery(rdb *redis.Client, gallery *models.Gallery) error {
+func CreateGallery(gallery *models.Gallery) error {
+	client := GetClient()
 	bytes, _ := json.Marshal(gallery)
-	err := rdb.Set(ctx, gallery.Name, bytes, 60*time.Second).Err()
+	err := client.Set(ctx, gallery.Name, bytes, 60*time.Second).Err()
 	if err != nil {
 		panic(err)
 		return err
@@ -90,8 +96,9 @@ func CreateGallery(rdb *redis.Client, gallery *models.Gallery) error {
 	return nil
 }
 
-func FindGallery(rdb *redis.Client, galleryName string) *models.Gallery {
-	galleryString, err := rdb.Get(ctx, galleryName).Result()
+func FindGallery(galleryName string) *models.Gallery {
+	client := GetClient()
+	galleryString, err := client.Get(ctx, galleryName).Result()
 	if err == redis.Nil {
 		log.Println("Gallery does not exist in Redis")
 		return nil
@@ -106,14 +113,15 @@ func FindGallery(rdb *redis.Client, galleryName string) *models.Gallery {
 	}
 }
 
-func UpdateGallery(rdb *redis.Client, gallery *models.Gallery, newGalleryName string) error {
+func UpdateGallery(gallery *models.Gallery, newGalleryName string) error {
+	client := GetClient()
 	log.Println(gallery)
 	log.Println(newGalleryName)
 	gallery.Name = newGalleryName
 
 	bytes, _ := json.Marshal(gallery)
 	log.Println(gallery)
-	err := rdb.Set(ctx, newGalleryName, bytes, 60*time.Second).Err()
+	err := client.Set(ctx, newGalleryName, bytes, 60*time.Second).Err()
 	if err != nil {
 		log.Fatal(err)
 		return err

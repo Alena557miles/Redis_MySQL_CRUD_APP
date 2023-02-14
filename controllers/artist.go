@@ -1,12 +1,11 @@
 package controllers
 
 import (
-	"creator/databaseRedis"
+	"creator/cache"
 	"creator/databaseSQL"
 	"creator/models"
 	"creator/responses"
 	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 )
@@ -35,8 +34,7 @@ func (ac *ArtistController) Registration(rw http.ResponseWriter, r *http.Request
 	var artistName string = vars["artist"]
 	artist := &models.Artist{Name: artistName, OnGallery: false}
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-	err := databaseRedis.CreateArtist(rdb, artist)
+	err := cache.CreateArtist(artist)
 	if err != nil {
 		panic(err)
 	}
@@ -69,10 +67,8 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	rdb := redis.NewClient(databaseRedis.Opt)
-
-	artist := databaseRedis.FindArtist(rdb, artistName)
-	gallery := databaseRedis.FindGallery(rdb, galleryName)
+	artist := cache.FindArtist(artistName)
+	gallery := cache.FindGallery(galleryName)
 	if artist != nil {
 		if gallery != nil {
 			err = databaseSQL.RegisterArtistToGallery(db, artist, gallery)

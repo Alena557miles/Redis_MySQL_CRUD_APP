@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"creator/cache"
 	"creator/databaseSQL"
 	"creator/models"
@@ -10,8 +9,6 @@ import (
 	"log"
 	"net/http"
 )
-
-var ctx = context.Background()
 
 type ArtController struct {
 	arts   []*models.Art
@@ -126,14 +123,10 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 	responses.ResponseAction("Art", artName, "", "", "deleted", rw)
 }
 
-func (ac *ArtController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
+func (ac *ArtController) DeleteAll(rw http.ResponseWriter, _ *http.Request) {
 	err := databaseSQL.DeleteAllArts()
 	if err != nil {
 		panic(err)
 	}
-	//err = cache.DeleteAllArts()
-	//if err != nil {
-	//	panic(err)
-	//}
 	responses.ResponseAction("Arts", "", "", "", "deleteall", rw)
 }

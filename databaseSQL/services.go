@@ -83,7 +83,7 @@ func DeleteAllArts() error {
 	PingDB(db)
 	_, err = db.Exec(`DELETE FROM arts`)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 		return err
 	}
 	return nil

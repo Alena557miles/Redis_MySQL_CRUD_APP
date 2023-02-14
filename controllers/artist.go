@@ -97,14 +97,10 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 	responses.ResponseAction("Artist", artistName, "Gallery", galleryName, "registered", rw)
 }
 
-func (ac *ArtistController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
+func (ac *ArtistController) DeleteAll(rw http.ResponseWriter, _ *http.Request) {
 	err := databaseSQL.DeleteAllArtists()
 	if err != nil {
 		panic(err)
 	}
-	//err = cache.DeleteAllArtists()
-	//if err != nil {
-	//	panic(err)
-	//}
 	responses.ResponseAction("Artists", "", "", "", "deleteall", rw)
 }

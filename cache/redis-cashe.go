@@ -55,12 +55,6 @@ func DeleteArt(artName string) error {
 	}
 }
 
-//func DeleteAllArts() error {
-//	client := GetClient()
-//
-//
-//}
-
 // ARTIST SERVICES
 func CreateArtist(artist *models.Artist) error {
 	client := GetClient()
@@ -89,12 +83,6 @@ func FindArtist(artistName string) *models.Artist {
 		return artist
 	}
 }
-
-//func DeleteAllArtists() error {
-//	client := GetClient()
-//
-//
-//}
 
 // GALLERY SERVICES
 func CreateGallery(gallery *models.Gallery) error {
@@ -140,8 +128,3 @@ func UpdateGallery(gallery *models.Gallery, newGalleryName string) error {
 	}
 	return nil
 }
-
-//func DeleteAllGalleries() error {
-//	client := GetClient()
-//
-//}

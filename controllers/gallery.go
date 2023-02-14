@@ -119,14 +119,10 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	responses.ResponseAction("Gallery", galleryName, "New gallery name", newGalleryName, "update", rw)
 }
 
-func (gc *GalleryController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
+func (gc *GalleryController) DeleteAll(rw http.ResponseWriter, _ *http.Request) {
 	err := databaseSQL.DeleteAllGalleries()
 	if err != nil {
 		panic(err)
 	}
-	//err = cache.DeleteAllGalleries()
-	//if err != nil {
-	//	panic(err)
-	//}
 	responses.ResponseAction("Galleries", "", "", "", "deleteall", rw)
 }

@@ -120,18 +120,13 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 }
 
 func (gc *GalleryController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
-	db, err := databaseSQL.ConnectSQL()
+	err := databaseSQL.DeleteAllGalleries()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
+		panic(err)
 	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-
-	err = databaseSQL.DeleteAllGalleries()
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	//err = cache.DeleteAllGalleries()
+	//if err != nil {
+	//	panic(err)
+	//}
 	responses.ResponseAction("Galleries", "", "", "", "deleteall", rw)
 }

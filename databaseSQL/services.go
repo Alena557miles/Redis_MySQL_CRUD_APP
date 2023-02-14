@@ -16,7 +16,7 @@ func CreateArt(artName string) error {
 	PingDB(db)
 	_, err = db.Exec(`INSERT INTO arts (art_name) VALUES (?)`, artName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return err
 	}
 	return nil

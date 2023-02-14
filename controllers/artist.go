@@ -98,17 +98,13 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 }
 
 func (ac *ArtistController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
-
-	db, err := databaseSQL.ConnectSQL()
+	err := databaseSQL.DeleteAllArtists()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
+		panic(err)
 	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-	err = databaseSQL.DeleteAllArtists()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//err = cache.DeleteAllArtists()
+	//if err != nil {
+	//	panic(err)
+	//}
 	responses.ResponseAction("Artists", "", "", "", "deleteall", rw)
 }

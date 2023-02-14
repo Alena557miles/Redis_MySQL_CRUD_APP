@@ -127,17 +127,13 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (ac *ArtController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
-	db, err := databaseSQL.ConnectSQL()
+	err := databaseSQL.DeleteAllArts()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
+		panic(err)
 	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-
-	err = databaseSQL.DeleteAllArts()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//err = cache.DeleteAllArts()
+	//if err != nil {
+	//	panic(err)
+	//}
 	responses.ResponseAction("Arts", "", "", "", "deleteall", rw)
 }

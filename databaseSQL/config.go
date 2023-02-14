@@ -17,7 +17,7 @@ func ConnectSQL() (*sql.DB, error) {
 	}
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return nil, err
 	}
 	return db, nil

@@ -2,13 +2,19 @@ package databaseSQL
 
 import (
 	"creator/models"
-	"database/sql"
 	"log"
 )
 
 // ART SERVICES
-func CreateArt(db *sql.DB, artName string) error {
-	_, err := db.Exec(`INSERT INTO arts (art_name) VALUES (?)`, artName)
+func CreateArt(artName string) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`INSERT INTO arts (art_name) VALUES (?)`, artName)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -16,19 +22,34 @@ func CreateArt(db *sql.DB, artName string) error {
 	return nil
 }
 
-func FindArt(db *sql.DB, artName string) (*models.Art, error) {
+func FindArt(artName string) (*models.Art, error) {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return nil, err
+	}
+	defer db.Close()
+	PingDB(db)
 	art := &models.Art{}
-	err := db.QueryRow(`SELECT arts.id FROM arts WHERE arts.art_name = ?`, artName).Scan(&art.ID)
+	err = db.QueryRow(`SELECT arts.id FROM arts WHERE arts.art_name = ?`, artName).Scan(&art.ID)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
+	log.Println(art)
 	return art, nil
 }
 
-func AssignedArtToArtist(db *sql.DB, art *models.Art, artist *models.Artist) error {
+func AssignedArtToArtist(art *models.Art, artist *models.Artist) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
 	// pass data to table artist-art
-	_, err := db.Exec(`INSERT INTO artist_art VALUES (?,?)`, artist.ID, art.ID)
+	_, err = db.Exec(`INSERT INTO artist_art VALUES (?,?)`, artist.ID, art.ID)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -36,8 +57,31 @@ func AssignedArtToArtist(db *sql.DB, art *models.Art, artist *models.Artist) err
 	return nil
 }
 
-func DeleteArt(db *sql.DB, art *models.Art) error {
-	_, err := db.Exec(`DELETE FROM arts WHERE id = ? `, art.ID)
+func DeleteArt(art *models.Art) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`DELETE FROM arts WHERE id = ? `, art.ID)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func DeleteAllArts() error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`DELETE FROM arts`)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -46,8 +90,15 @@ func DeleteArt(db *sql.DB, art *models.Art) error {
 }
 
 // ARTIST SERVICES
-func CreateArtist(db *sql.DB, artistName string) error {
-	_, err := db.Exec(`INSERT INTO artists (artist_name) VALUES (?)`, artistName)
+func CreateArtist(artistName string) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`INSERT INTO artists (artist_name) VALUES (?)`, artistName)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -55,9 +106,17 @@ func CreateArtist(db *sql.DB, artistName string) error {
 	return nil
 }
 
-func FindArtist(db *sql.DB, artistName string) (*models.Artist, error) {
+func FindArtist(artistName string) (*models.Artist, error) {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return nil, err
+	}
+	defer db.Close()
+	PingDB(db)
+
 	artist := &models.Artist{}
-	err := db.QueryRow(`SELECT artists.id FROM artists WHERE artists.artist_name = ?`, artistName).Scan(&artist.ID)
+	err = db.QueryRow(`SELECT artists.id FROM artists WHERE artists.artist_name = ?`, artistName).Scan(&artist.ID)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -65,8 +124,32 @@ func FindArtist(db *sql.DB, artistName string) (*models.Artist, error) {
 	return artist, nil
 }
 
-func RegisterArtistToGallery(db *sql.DB, artist *models.Artist, gallery *models.Gallery) error {
-	_, err := db.Exec(`INSERT INTO artist_gallery VALUES (?,?)`, artist.ID, gallery.ID)
+func RegisterArtistToGallery(artist *models.Artist, gallery *models.Gallery) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+
+	_, err = db.Exec(`INSERT INTO artist_gallery VALUES (?,?)`, artist.ID, gallery.ID)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func DeleteAllArtists() error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`DELETE FROM artists`)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -75,17 +158,33 @@ func RegisterArtistToGallery(db *sql.DB, artist *models.Artist, gallery *models.
 }
 
 // GALLERY SERVICES
-func CreateGallery(db *sql.DB, g *models.Gallery) {
-	_, err := db.Exec(`INSERT INTO galleries (gallery_name) VALUES (?)`, g.Name)
+func CreateGallery(g *models.Gallery) {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return
+	}
+	defer db.Close()
+	PingDB(db)
+
+	_, err = db.Exec(`INSERT INTO galleries (gallery_name) VALUES (?)`, g.Name)
 	if err != nil {
 		log.Fatal(err)
 
 	}
 }
 
-func FindGallery(db *sql.DB, galleryName string) (*models.Gallery, error) {
+func FindGallery(galleryName string) (*models.Gallery, error) {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return nil, err
+	}
+	defer db.Close()
+	PingDB(db)
+
 	g := &models.Gallery{}
-	err := db.QueryRow(`SELECT galleries.id FROM galleries WHERE galleries.gallery_name = ?`, galleryName).Scan(&g.ID)
+	err = db.QueryRow(`SELECT galleries.id FROM galleries WHERE galleries.gallery_name = ?`, galleryName).Scan(&g.ID)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
@@ -93,8 +192,15 @@ func FindGallery(db *sql.DB, galleryName string) (*models.Gallery, error) {
 	return g, nil
 }
 
-func UpdateGallery(db *sql.DB, g *models.Gallery, newGalleryName string) error {
-	_, err := db.Exec(`UPDATE galleries SET gallery_name = ? WHERE id = ?`, newGalleryName, g.ID)
+func UpdateGallery(g *models.Gallery, newGalleryName string) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`UPDATE galleries SET gallery_name = ? WHERE id = ?`, newGalleryName, g.ID)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -102,8 +208,32 @@ func UpdateGallery(db *sql.DB, g *models.Gallery, newGalleryName string) error {
 	return nil
 }
 
-func DeleteArtist(db *sql.DB, artist *models.Artist, gallery *models.Gallery) error {
-	_, err := db.Exec(`DELETE FROM artist_gallery WHERE artist_gallery.artist_id = ? and artist_gallery.gallery_id = ?`, artist.ID, gallery.ID)
+func DeleteArtist(artist *models.Artist, gallery *models.Gallery) error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return err
+	}
+	defer db.Close()
+	PingDB(db)
+
+	_, err = db.Exec(`DELETE FROM artist_gallery WHERE artist_gallery.artist_id = ? and artist_gallery.gallery_id = ?`, artist.ID, gallery.ID)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func DeleteAllGalleries() error {
+	db, err := ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return nil
+	}
+	defer db.Close()
+	PingDB(db)
+	_, err = db.Exec(`DELETE FROM galleries`)
 	if err != nil {
 		log.Fatal(err)
 		return err

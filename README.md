@@ -29,6 +29,15 @@ DELETE AN ART FROM GALLERY use path:
 RENAME GALLERY use path:
 #### `http://localhost:8080/renamegallery/{gallery}/{newgallery}`
 
+DELETE ALL GALLERIES use path:
+#### `http://localhost:8080/deleteallgalleries`
+
+DELETE ALL ARTISTS path:
+#### `http://localhost:8080/deleteallartists`
+
+DELETE ALL ARTS use path:
+#### `http://localhost:8080/deleteallarts`
+
 
 
 where {art} - name of the Art

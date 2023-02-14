@@ -31,6 +31,10 @@ func (gc *GalleryController) RegisterActions() {
 	// RENAME GALLERY
 	// localhost:8080/renamegallery/Tokio/JapaneTreasure
 	gc.router.HandleFunc("/renamegallery/{gallery}/{newgallery}", gc.GalleryUpdate)
+
+	// DELETE ALL GALLERIES
+	// localhost:8080/deleteallgalleries/
+	gc.router.HandleFunc("/deleteallgalleries", gc.DeleteAll)
 }
 
 func (gc *GalleryController) GalleryCreation(rw http.ResponseWriter, r *http.Request) {
@@ -42,15 +46,7 @@ func (gc *GalleryController) GalleryCreation(rw http.ResponseWriter, r *http.Req
 	if err != nil {
 		panic(err)
 	}
-
-	db, err := databaseSQL.ConnectSQL()
-	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
-	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-	databaseSQL.CreateGallery(db, gallery)
+	databaseSQL.CreateGallery(gallery)
 	responses.ResponseCreate("Gallery", galleryName, rw)
 }
 
@@ -59,50 +55,42 @@ func (gc *GalleryController) RemoveArtistFromGal(rw http.ResponseWriter, r *http
 	var artistName string = vars["artist"]
 	var galleryName string = vars["gallery"]
 
-	db, err := databaseSQL.ConnectSQL()
-	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
-	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-
 	artist := cache.FindArtist(artistName)
 	gallery := cache.FindGallery(galleryName)
 	if artist != nil {
 		if gallery != nil {
-			err = databaseSQL.DeleteArtist(db, artist, gallery)
+			err := databaseSQL.DeleteArtist(artist, gallery)
 			if err != nil {
 				panic(err)
 			}
 			return
 		}
-		gallery, err := databaseSQL.FindGallery(db, galleryName)
+		gallery, err := databaseSQL.FindGallery(galleryName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = databaseSQL.DeleteArtist(db, artist, gallery)
+		err = databaseSQL.DeleteArtist(artist, gallery)
 		if err != nil {
 			panic(err)
 		}
 	} else if artist == nil {
 		// searching data on DB MySQL
-		artist, err := databaseSQL.FindArtist(db, artistName)
+		artist, err := databaseSQL.FindArtist(artistName)
 		if err != nil {
 			log.Fatal(err)
 		}
 		if gallery != nil {
-			err = databaseSQL.DeleteArtist(db, artist, gallery)
+			err = databaseSQL.DeleteArtist(artist, gallery)
 			if err != nil {
 				panic(err)
 			}
 			return
 		}
-		gallery, err := databaseSQL.FindGallery(db, galleryName)
+		gallery, err := databaseSQL.FindGallery(galleryName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = databaseSQL.DeleteArtist(db, artist, gallery)
+		err = databaseSQL.DeleteArtist(artist, gallery)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -115,19 +103,11 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	var galleryName string = vars["gallery"]
 	var newGalleryName string = vars["newgallery"]
 
-	db, err := databaseSQL.ConnectSQL()
-	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
-	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-
-	g, err := databaseSQL.FindGallery(db, galleryName)
+	g, err := databaseSQL.FindGallery(galleryName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = databaseSQL.UpdateGallery(db, g, newGalleryName)
+	err = databaseSQL.UpdateGallery(g, newGalleryName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,4 +117,21 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	}
 
 	responses.ResponseAction("Gallery", galleryName, "New gallery name", newGalleryName, "update", rw)
+}
+
+func (gc *GalleryController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
+	db, err := databaseSQL.ConnectSQL()
+	if err != nil {
+		log.Fatalf("SQL DB Connection Failed")
+		return
+	}
+	defer db.Close()
+	databaseSQL.PingDB(db)
+
+	err = databaseSQL.DeleteAllGalleries()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	responses.ResponseAction("Galleries", "", "", "", "deleteall", rw)
 }

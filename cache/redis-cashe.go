@@ -55,6 +55,21 @@ func DeleteArt(artName string) error {
 	}
 }
 
+func DeleteAllArts(artName string) error {
+	client := GetClient()
+	_, err := client.Get(ctx, artName).Result()
+	if err == redis.Nil {
+		return nil
+	} else {
+		err := client.Del(ctx, artName).Err()
+		if err != nil {
+			panic(err)
+			return err
+		}
+		return nil
+	}
+}
+
 // ARTIST SERVICES
 func CreateArtist(artist *models.Artist) error {
 	client := GetClient()
@@ -68,6 +83,23 @@ func CreateArtist(artist *models.Artist) error {
 }
 
 func FindArtist(artistName string) *models.Artist {
+	client := GetClient()
+	artistString, err := client.Get(ctx, artistName).Result()
+	if err == redis.Nil {
+		log.Println("Artist does not exist in Redis")
+		return nil
+	} else if err != nil {
+		panic(err)
+	} else {
+		log.Println("Data about Artist from Redis: ", artistString)
+		artToByte := []byte(artistString)
+		var artist *models.Artist
+		json.Unmarshal(artToByte, &artist)
+		return artist
+	}
+}
+
+func DeleteAllArtists(artistName string) *models.Artist {
 	client := GetClient()
 	artistString, err := client.Get(ctx, artistName).Result()
 	if err == redis.Nil {
@@ -124,6 +156,17 @@ func UpdateGallery(gallery *models.Gallery, newGalleryName string) error {
 	err := client.Set(ctx, newGalleryName, bytes, 60*time.Second).Err()
 	if err != nil {
 		log.Fatal(err)
+		return err
+	}
+	return nil
+}
+
+func DeleteAllGalleries(gallery *models.Gallery) error {
+	client := GetClient()
+	bytes, _ := json.Marshal(gallery)
+	err := client.Set(ctx, gallery.Name, bytes, 60*time.Second).Err()
+	if err != nil {
+		panic(err)
 		return err
 	}
 	return nil

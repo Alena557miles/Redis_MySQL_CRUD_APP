@@ -23,8 +23,10 @@ func ResponseAction(obj1 string, obj1N string, obj2 string, obj2N string, act st
 		resp["message"] = obj1 + ` : ` + obj1N + ` was renamed to ` + obj2 + ` : ` + obj2N
 	case act == "deleted":
 		resp["message"] = obj1 + ` : ` + obj1N + ` was ` + act + ` successfully ` + obj2 + obj2N
+	case act == "deleteall":
+		resp["message"] = obj1 + ` were deleted successfully `
 	default:
-		resp["message"] = obj1 + ` : ` + obj1N + `is` + act + ` on ` + obj2 + ` : ` + obj2N
+		resp["message"] = obj1 + ` : ` + obj1N + ` is ` + act + ` on ` + obj2 + ` : ` + obj2N
 	}
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {

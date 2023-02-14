@@ -35,6 +35,10 @@ func (ac *ArtController) RegisterActions() {
 	// localhost:8080/deleteart/blackCat
 	ac.router.HandleFunc("/deleteart/{art}", ac.ArtDeletion)
 
+	// DELETE ALL ARTS
+	// localhost:8080/deleteallarts/
+	ac.router.HandleFunc("/deleteallarts/", ac.DeleteAll)
+
 }
 
 func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
@@ -47,14 +51,7 @@ func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	db, err := databaseSQL.ConnectSQL()
-	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
-	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-	err = databaseSQL.CreateArt(db, artName)
+	err = databaseSQL.CreateArt(artName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,49 +63,41 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 	var artistName string = vars["artist"]
 	var artName string = vars["art"]
 
-	db, err := databaseSQL.ConnectSQL()
-	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
-		return
-	}
-	defer db.Close()
-	databaseSQL.PingDB(db)
-
 	art := cache.FindArt(artName)
 	artist := cache.FindArtist(artistName)
 	if art != nil {
 		if artist != nil {
-			err = databaseSQL.AssignedArtToArtist(db, art, artist)
+			err := databaseSQL.AssignedArtToArtist(art, artist)
 			if err != nil {
 				panic(err)
 			}
 			return
 		}
-		artist, err := databaseSQL.FindArtist(db, artistName)
+		artist, err := databaseSQL.FindArtist(artistName)
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.AssignedArtToArtist(db, art, artist)
+		err = databaseSQL.AssignedArtToArtist(art, artist)
 		if err != nil {
 			panic(err)
 		}
 	} else if art == nil {
-		art, err := databaseSQL.FindArt(db, artName)
+		art, err := databaseSQL.FindArt(artName)
 		if err != nil {
 			panic(err)
 		}
 		if artist != nil {
-			err = databaseSQL.AssignedArtToArtist(db, art, artist)
+			err = databaseSQL.AssignedArtToArtist(art, artist)
 			if err != nil {
 				panic(err)
 			}
 			return
 		}
-		artist, err := databaseSQL.FindArtist(db, artistName)
+		artist, err := databaseSQL.FindArtist(artistName)
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.AssignedArtToArtist(db, art, artist)
+		err = databaseSQL.AssignedArtToArtist(art, artist)
 		if err != nil {
 			panic(err)
 		}
@@ -126,6 +115,18 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	art, err := databaseSQL.FindArt(artName)
+	if err != nil {
+		panic(err)
+	}
+	err = databaseSQL.DeleteArt(art)
+	if err != nil {
+		log.Fatal(err)
+	}
+	responses.ResponseAction("Art", artName, "", "", "deleted", rw)
+}
+
+func (ac *ArtController) DeleteAll(rw http.ResponseWriter, r *http.Request) {
 	db, err := databaseSQL.ConnectSQL()
 	if err != nil {
 		log.Fatalf("SQL DB Connection Failed")
@@ -134,13 +135,9 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	databaseSQL.PingDB(db)
 
-	art, err := databaseSQL.FindArt(db, artName)
-	if err != nil {
-		panic(err)
-	}
-	err = databaseSQL.DeleteArt(db, art)
+	err = databaseSQL.DeleteAllArts()
 	if err != nil {
 		log.Fatal(err)
 	}
-	responses.ResponseAction("Art", artName, "", "", "deleted", rw)
+	responses.ResponseAction("Arts", "", "", "", "deleteall", rw)
 }

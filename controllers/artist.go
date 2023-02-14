@@ -43,9 +43,9 @@ func (ac *ArtistController) Registration(rw http.ResponseWriter, r *http.Request
 		panic(err)
 	}
 
-	err = databaseSQL.CreateArtist(artistName)
-	if err != nil {
-		log.Fatal(err)
+	err1 := databaseSQL.CreateArtist(artistName)
+	if err1 != nil {
+		log.Println(err1)
 	}
 	responses.ResponseCreate("Artist", artistName, rw)
 }
@@ -69,9 +69,9 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.RegisterArtistToGallery(artist, gallery)
-		if err != nil {
-			log.Fatal(err)
+		err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
+		if err1 != nil {
+			log.Println(err1)
 		}
 	} else if artist == nil {
 		artist, err := databaseSQL.FindArtist(artistName)
@@ -79,9 +79,9 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 			panic(err)
 		}
 		if gallery != nil {
-			err = databaseSQL.RegisterArtistToGallery(artist, gallery)
-			if err != nil {
-				panic(err)
+			err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
+			if err1 != nil {
+				panic(err1)
 			}
 			return
 		}
@@ -89,9 +89,9 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.RegisterArtistToGallery(artist, gallery)
-		if err != nil {
-			panic(err)
+		err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
+		if err1 != nil {
+			panic(err1)
 		}
 	}
 	responses.ResponseAction("Artist", artistName, "Gallery", galleryName, "registered", rw)

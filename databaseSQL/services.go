@@ -9,7 +9,7 @@ import (
 func CreateArt(artName string) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -25,7 +25,7 @@ func CreateArt(artName string) error {
 func FindArt(artName string) (*models.Art, error) {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return nil, err
 	}
 	defer db.Close()
@@ -43,7 +43,7 @@ func FindArt(artName string) (*models.Art, error) {
 func AssignedArtToArtist(art *models.Art, artist *models.Artist) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -60,7 +60,7 @@ func AssignedArtToArtist(art *models.Art, artist *models.Artist) error {
 func DeleteArt(art *models.Art) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -76,7 +76,7 @@ func DeleteArt(art *models.Art) error {
 func DeleteAllArts() error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -93,7 +93,7 @@ func DeleteAllArts() error {
 func CreateArtist(artistName string) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -109,7 +109,7 @@ func CreateArtist(artistName string) error {
 func FindArtist(artistName string) (*models.Artist, error) {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return nil, err
 	}
 	defer db.Close()
@@ -127,7 +127,7 @@ func FindArtist(artistName string) (*models.Artist, error) {
 func RegisterArtistToGallery(artist *models.Artist, gallery *models.Gallery) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -144,7 +144,7 @@ func RegisterArtistToGallery(artist *models.Artist, gallery *models.Gallery) err
 func DeleteAllArtists() error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -161,7 +161,7 @@ func DeleteAllArtists() error {
 func CreateGallery(g *models.Gallery) {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return
 	}
 	defer db.Close()
@@ -177,7 +177,7 @@ func CreateGallery(g *models.Gallery) {
 func FindGallery(galleryName string) (*models.Gallery, error) {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return nil, err
 	}
 	defer db.Close()
@@ -195,7 +195,7 @@ func FindGallery(galleryName string) (*models.Gallery, error) {
 func UpdateGallery(g *models.Gallery, newGalleryName string) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -211,7 +211,7 @@ func UpdateGallery(g *models.Gallery, newGalleryName string) error {
 func DeleteArtist(artist *models.Artist, gallery *models.Gallery) error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return err
 	}
 	defer db.Close()
@@ -228,7 +228,7 @@ func DeleteArtist(artist *models.Artist, gallery *models.Gallery) error {
 func DeleteAllGalleries() error {
 	db, err := ConnectSQL()
 	if err != nil {
-		log.Fatalf("SQL DB Connection Failed")
+		log.Println("SQL DB Connection Failed")
 		return nil
 	}
 	defer db.Close()

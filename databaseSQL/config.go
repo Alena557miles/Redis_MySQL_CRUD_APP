@@ -26,7 +26,7 @@ func ConnectSQL() (*sql.DB, error) {
 func PingDB(db *sql.DB) {
 	pingErr := db.Ping()
 	if pingErr != nil {
-		log.Fatal(pingErr)
+		log.Println(pingErr)
 	}
 	fmt.Println("Connected!")
 }

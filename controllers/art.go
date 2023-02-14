@@ -48,9 +48,9 @@ func (ac *ArtController) ArtCreation(rw http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	err = databaseSQL.CreateArt(artName)
+	err1 := databaseSQL.CreateArt(artName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err1)
 	}
 	responses.ResponseCreate("Art", artName, rw)
 }
@@ -74,9 +74,9 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.AssignedArtToArtist(art, artist)
-		if err != nil {
-			panic(err)
+		err1 := databaseSQL.AssignedArtToArtist(art, artist)
+		if err1 != nil {
+			panic(err1)
 		}
 	} else if art == nil {
 		art, err := databaseSQL.FindArt(artName)
@@ -84,9 +84,9 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		if artist != nil {
-			err = databaseSQL.AssignedArtToArtist(art, artist)
-			if err != nil {
-				panic(err)
+			err1 := databaseSQL.AssignedArtToArtist(art, artist)
+			if err1 != nil {
+				panic(err1)
 			}
 			return
 		}
@@ -94,9 +94,9 @@ func (ac *ArtController) AssignArt(rw http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		err = databaseSQL.AssignedArtToArtist(art, artist)
-		if err != nil {
-			panic(err)
+		err1 := databaseSQL.AssignedArtToArtist(art, artist)
+		if err1 != nil {
+			panic(err1)
 		}
 	}
 
@@ -116,9 +116,9 @@ func (ac *ArtController) ArtDeletion(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	err = databaseSQL.DeleteArt(art)
-	if err != nil {
-		log.Fatal(err)
+	err1 := databaseSQL.DeleteArt(art)
+	if err1 != nil {
+		log.Println(err1)
 	}
 	responses.ResponseAction("Art", artName, "", "", "deleted", rw)
 }

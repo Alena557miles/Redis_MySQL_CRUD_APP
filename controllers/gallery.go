@@ -107,13 +107,13 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = databaseSQL.UpdateGallery(g, newGalleryName)
-	if err != nil {
-		log.Fatal(err)
+	err1 := databaseSQL.UpdateGallery(g, newGalleryName)
+	if err1 != nil {
+		log.Fatal(err1)
 	}
-	err = cache.UpdateGallery(g, newGalleryName)
-	if err != nil {
-		panic(err)
+	err2 := cache.UpdateGallery(g, newGalleryName)
+	if err2 != nil {
+		panic(err2)
 	}
 
 	responses.ResponseAction("Gallery", galleryName, "New gallery name", newGalleryName, "update", rw)

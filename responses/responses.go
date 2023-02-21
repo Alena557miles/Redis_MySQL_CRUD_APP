@@ -35,3 +35,13 @@ func ResponseAction(obj1 string, obj1N string, obj2 string, obj2N string, act st
 	rw.Write(jsonResp)
 
 }
+
+func ResponseError(m string, err error, rw http.ResponseWriter) {
+	resp := make(map[string]string)
+	resp["message"] = `Error was happened: ` + err.Error() + m
+	jsonResp, err := json.Marshal(resp)
+	if err != nil {
+		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
+	}
+	rw.Write(jsonResp)
+}

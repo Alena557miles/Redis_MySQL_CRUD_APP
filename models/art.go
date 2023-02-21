@@ -5,7 +5,3 @@ type Art struct {
 	Name  string `json:"art_name"`
 	Owner string `json:"art_owner"`
 }
-
-func (a *Art) IsntAssigned() bool {
-	return a.Owner == ""
-}

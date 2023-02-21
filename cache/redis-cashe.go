@@ -13,7 +13,7 @@ var ctx = context.Background()
 
 // ART SERVICES
 func CreateArt(art *models.Art) error {
-	client := GetClient()
+	client := GetInstance()
 	bytes, _ := json.Marshal(art)
 	err := client.Set(ctx, art.Name, bytes, 60*time.Second).Err()
 	if err != nil {
@@ -24,7 +24,7 @@ func CreateArt(art *models.Art) error {
 }
 
 func FindArt(artName string) *models.Art {
-	client := GetClient()
+	client := GetInstance()
 	artString, err := client.Get(ctx, artName).Result()
 	if err == redis.Nil {
 		log.Println("Art does not exist in Redis")
@@ -41,7 +41,7 @@ func FindArt(artName string) *models.Art {
 }
 
 func DeleteArt(artName string) error {
-	client := GetClient()
+	client := GetInstance()
 	_, err := client.Get(ctx, artName).Result()
 	if err == redis.Nil {
 		return nil
@@ -57,7 +57,7 @@ func DeleteArt(artName string) error {
 
 // ARTIST SERVICES
 func CreateArtist(artist *models.Artist) error {
-	client := GetClient()
+	client := GetInstance()
 	bytes, _ := json.Marshal(artist)
 	err := client.Set(ctx, artist.Name, bytes, 60*time.Second).Err()
 	if err != nil {
@@ -68,7 +68,7 @@ func CreateArtist(artist *models.Artist) error {
 }
 
 func FindArtist(artistName string) *models.Artist {
-	client := GetClient()
+	client := GetInstance()
 	artistString, err := client.Get(ctx, artistName).Result()
 	if err == redis.Nil {
 		log.Println("Artist does not exist in Redis")
@@ -86,7 +86,7 @@ func FindArtist(artistName string) *models.Artist {
 
 // GALLERY SERVICES
 func CreateGallery(gallery *models.Gallery) error {
-	client := GetClient()
+	client := GetInstance()
 	bytes, _ := json.Marshal(gallery)
 	err := client.Set(ctx, gallery.Name, bytes, 60*time.Second).Err()
 	if err != nil {
@@ -97,7 +97,7 @@ func CreateGallery(gallery *models.Gallery) error {
 }
 
 func FindGallery(galleryName string) *models.Gallery {
-	client := GetClient()
+	client := GetInstance()
 	galleryString, err := client.Get(ctx, galleryName).Result()
 	if err == redis.Nil {
 		log.Println("Gallery does not exist in Redis")
@@ -114,7 +114,7 @@ func FindGallery(galleryName string) *models.Gallery {
 }
 
 func UpdateGallery(gallery *models.Gallery, newGalleryName string) error {
-	client := GetClient()
+	client := GetInstance()
 	log.Println(gallery)
 	log.Println(newGalleryName)
 	gallery.Name = newGalleryName

@@ -38,82 +38,65 @@ func (gc *GalleryController) RegisterActions() {
 }
 
 func (gc *GalleryController) GalleryCreation(rw http.ResponseWriter, r *http.Request) {
-	var vars map[string]string = mux.Vars(r)
-	var galleryName string = vars["gallery"]
+	var vars = mux.Vars(r)
+	var galleryName = vars["gallery"]
 	gallery := &models.Gallery{Name: galleryName}
 
+	err1 := databaseSQL.CreateGallery(gallery)
+	if err1 != nil {
+		log.Println(err1)
+		responses.ResponseError(`Failed to create on DB`, err1, rw)
+	}
 	err := cache.CreateGallery(gallery)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		responses.ResponseError(`Failed to create cache`, err, rw)
 	}
-	databaseSQL.CreateGallery(gallery)
 	responses.ResponseCreate("Gallery", galleryName, rw)
 }
 
 func (gc *GalleryController) RemoveArtistFromGal(rw http.ResponseWriter, r *http.Request) {
-	var vars map[string]string = mux.Vars(r)
-	var artistName string = vars["artist"]
-	var galleryName string = vars["gallery"]
-
-	artist := cache.FindArtist(artistName)
-	gallery := cache.FindGallery(galleryName)
-	if artist != nil {
-		if gallery != nil {
-			err := databaseSQL.DeleteArtist(artist, gallery)
-			if err != nil {
-				panic(err)
-			}
-			return
-		}
-		gallery, err := databaseSQL.FindGallery(galleryName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = databaseSQL.DeleteArtist(artist, gallery)
-		if err != nil {
-			panic(err)
-		}
-	} else if artist == nil {
-		// searching data on DB MySQL
-		artist, err := databaseSQL.FindArtist(artistName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if gallery != nil {
-			err = databaseSQL.DeleteArtist(artist, gallery)
-			if err != nil {
-				panic(err)
-			}
-			return
-		}
-		gallery, err := databaseSQL.FindGallery(galleryName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = databaseSQL.DeleteArtist(artist, gallery)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var vars = mux.Vars(r)
+	var artistName = vars["artist"]
+	var galleryName = vars["gallery"]
+	gallery, err := gc.FindValue(galleryName, rw)
+	if err != nil {
+		log.Println(err)
+		responses.ResponseError(`Failed to find on DB `, err, rw)
+	}
+	artistC := &ArtistController{}
+	artist, err1 := artistC.FindValue(artistName, rw)
+	if err1 != nil {
+		log.Println(err1)
+		responses.ResponseError(`Failed to assign art to artist on DB`, err, rw)
+	}
+	err2 := databaseSQL.DeleteArtist(artist, gallery)
+	if err2 != nil {
+		log.Println(err2)
+		responses.ResponseError(`Failed to delete from DB `, err1, rw)
 	}
 	responses.ResponseAction("Artist", artistName, "Gallery", galleryName, "deleted", rw)
 }
 
 func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Request) {
-	var vars map[string]string = mux.Vars(r)
-	var galleryName string = vars["gallery"]
-	var newGalleryName string = vars["newgallery"]
+	var vars = mux.Vars(r)
+	var galleryName = vars["gallery"]
+	var newGalleryName = vars["newgallery"]
 
 	g, err := databaseSQL.FindGallery(galleryName)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		responses.ResponseError(`Failed to find on DB `, err, rw)
 	}
 	err1 := databaseSQL.UpdateGallery(g, newGalleryName)
 	if err1 != nil {
-		log.Fatal(err1)
+		log.Println(err1)
+		responses.ResponseError(`Failed to update on DB `, err1, rw)
 	}
 	err2 := cache.UpdateGallery(g, newGalleryName)
 	if err2 != nil {
-		panic(err2)
+		log.Println(err2)
+		responses.ResponseError(`Failed to update on DB `, err2, rw)
 	}
 
 	responses.ResponseAction("Gallery", galleryName, "New gallery name", newGalleryName, "update", rw)
@@ -122,7 +105,22 @@ func (gc *GalleryController) GalleryUpdate(rw http.ResponseWriter, r *http.Reque
 func (gc *GalleryController) DeleteAll(rw http.ResponseWriter, _ *http.Request) {
 	err := databaseSQL.DeleteAllGalleries()
 	if err != nil {
-		panic(err)
+		responses.ResponseError(`Failed to delete from DB`, err, rw)
 	}
 	responses.ResponseAction("Galleries", "", "", "", "deleteall", rw)
+}
+
+func (gc *GalleryController) FindValue(name string, rw http.ResponseWriter) (*models.Gallery, error) {
+	obj := cache.FindGallery(name)
+	if obj != nil {
+		return obj, nil
+	} else {
+		obj, err := databaseSQL.FindGallery(name)
+		if err != nil {
+			log.Println(err)
+			responses.ResponseError(`Failed to find artis on DB`, err, rw)
+			return nil, err
+		}
+		return obj, nil
+	}
 }

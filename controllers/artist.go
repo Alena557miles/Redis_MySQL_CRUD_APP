@@ -34,65 +34,42 @@ func (ac *ArtistController) RegisterActions() {
 }
 
 func (ac *ArtistController) Registration(rw http.ResponseWriter, r *http.Request) {
-	var vars map[string]string = mux.Vars(r)
-	var artistName string = vars["artist"]
+	var vars = mux.Vars(r)
+	var artistName = vars["artist"]
 	artist := &models.Artist{Name: artistName, OnGallery: false}
 
 	err := cache.CreateArtist(artist)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	err1 := databaseSQL.CreateArtist(artistName)
 	if err1 != nil {
-		log.Println(err1)
+		responses.ResponseError(`Failed to create on DB`, err1, rw)
 	}
 	responses.ResponseCreate("Artist", artistName, rw)
 }
 
 func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.Request) {
-	var vars map[string]string = mux.Vars(r)
-	var artistName string = vars["artist"]
-	var galleryName string = vars["gallery"]
+	var vars = mux.Vars(r)
+	var artistName = vars["artist"]
+	var galleryName = vars["gallery"]
 
-	artist := cache.FindArtist(artistName)
-	gallery := cache.FindGallery(galleryName)
-	if artist != nil {
-		if gallery != nil {
-			err := databaseSQL.RegisterArtistToGallery(artist, gallery)
-			if err != nil {
-				panic(err)
-			}
-			return
-		}
-		gallery, err := databaseSQL.FindGallery(galleryName)
-		if err != nil {
-			panic(err)
-		}
-		err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
-		if err1 != nil {
-			log.Println(err1)
-		}
-	} else if artist == nil {
-		artist, err := databaseSQL.FindArtist(artistName)
-		if err != nil {
-			panic(err)
-		}
-		if gallery != nil {
-			err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
-			if err1 != nil {
-				panic(err1)
-			}
-			return
-		}
-		gallery, err := databaseSQL.FindGallery(galleryName)
-		if err != nil {
-			panic(err)
-		}
-		err1 := databaseSQL.RegisterArtistToGallery(artist, gallery)
-		if err1 != nil {
-			panic(err1)
-		}
+	artist, err := ac.FindValue(artistName, rw)
+	if err != nil {
+		log.Println(err)
+		responses.ResponseError(`Failed to find artist on DB`, err, rw)
+	}
+	galleryC := &GalleryController{}
+	gallery, err1 := galleryC.FindValue(galleryName, rw)
+	if err1 != nil {
+		log.Println(err1)
+		responses.ResponseError(`Failed to find gallery on DB`, err, rw)
+	}
+	err2 := databaseSQL.RegisterArtistToGallery(artist, gallery)
+	if err2 != nil {
+		log.Println(err2)
+		responses.ResponseError(`Failed to register `, err2, rw)
 	}
 	responses.ResponseAction("Artist", artistName, "Gallery", galleryName, "registered", rw)
 }
@@ -100,7 +77,22 @@ func (ac *ArtistController) ArtistRegistration(rw http.ResponseWriter, r *http.R
 func (ac *ArtistController) DeleteAll(rw http.ResponseWriter, _ *http.Request) {
 	err := databaseSQL.DeleteAllArtists()
 	if err != nil {
-		panic(err)
+		responses.ResponseError(`Failed to delete from DB`, err, rw)
 	}
 	responses.ResponseAction("Artists", "", "", "", "deleteall", rw)
+}
+
+func (ac *ArtistController) FindValue(name string, rw http.ResponseWriter) (*models.Artist, error) {
+	obj := cache.FindArtist(name)
+	if obj != nil {
+		return obj, nil
+	} else {
+		obj, err := databaseSQL.FindArtist(name)
+		if err != nil {
+			log.Println(err)
+			responses.ResponseError(`Failed to find artis on DB`, err, rw)
+			return nil, err
+		}
+		return obj, nil
+	}
 }
